@@ -9,6 +9,7 @@ import predictionRoutes from './routes/predictions';
 import reportRoutes from './routes/reports';
 import alertRoutes from './routes/alerts';
 import analyticsRoutes from './routes/analytics';
+import environmentDataRoutes from './routes/environmentData';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({ logger: true });
@@ -27,5 +28,6 @@ export function buildApp(): FastifyInstance {
   app.register(reportRoutes, { prefix: '/api/reports' });
   app.register(alertRoutes, { prefix: '/api/alerts' });
   app.register(analyticsRoutes, { prefix: '/api/analytics' });
+  app.register(environmentDataRoutes, { prefix: '/api/environment' });
   return app;
 }
