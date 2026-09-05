@@ -4,7 +4,7 @@ import { z } from 'zod';
 const schema = z.object({
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().int().positive().default(4000),
-  PYTHON_AI_URL: z.string().url().default('http://127.0.0.1:8000'),
+ PYTHON_AI_URL: z.string().url().default('https://airpulse-backend-1-dsjb.onrender.com'),
   CORS_ORIGINS: z.string().default('http://localhost:5173,http://127.0.0.1:5173'),
   OPENAQ_API_KEY: z.string().optional(),
   NASA_FIRMS_MAP_KEY: z.string().optional(),
