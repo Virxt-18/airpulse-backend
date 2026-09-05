@@ -9,3 +9,4 @@ app.listen({ host: env.HOST, port: env.PORT }).then(() => {
 	app.log.error(error);
 	process.exit(1);
 });
+
