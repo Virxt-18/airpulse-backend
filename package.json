@@ -6,11 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-<<<<<<< HEAD
-    "start": "node src/server.ts",
-=======
     "start": "node dist/src/server.js",
->>>>>>> f83733b46c7d85fa88394cdb2b2730d1be744cfd
     "typecheck": "tsc --noEmit",
     "test": "echo \"No tests configured\""
   },

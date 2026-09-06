@@ -58,3 +58,25 @@ export async function getNasaFirms(bbox = DEFAULT_BBOX, days = 1) {
   return { format: 'csv', data: await response.text() };
 }
 
+export async function getPredictionWeather(latitude?: number, longitude?: number) {
+  const point = coordinates(latitude, longitude);
+  const params = new URLSearchParams({
+    latitude: String(point.latitude),
+    longitude: String(point.longitude),
+    current: 'temperature_2m,relative_humidity_2m,wind_speed_10m',
+    timezone: 'auto'
+  });
+  const data = await requestJson(`https://api.open-meteo.com/v1/forecast?${params}`) as {
+    current?: {
+      temperature_2m?: number;
+      relative_humidity_2m?: number;
+      wind_speed_10m?: number;
+    };
+  };
+  return {
+    temperature: data.current?.temperature_2m ?? 28,
+    humidity: data.current?.relative_humidity_2m ?? 60,
+    windSpeed: data.current?.wind_speed_10m ?? 8
+  };
+}
+
