@@ -31,7 +31,7 @@ const app: FastifyInstance = Fastify(options);
 
 // CORS
 app.register(cors, {
-  origin: "*",
+  origin: ["http://localhost:5174", "http://localhost:5173"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 });
 
