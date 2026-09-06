@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 from prediction.predict import predict
 
 app = Flask(__name__)
-
+CORS(app, origins=["http://localhost:5177"])
 
 @app.get("/health")
 def health():
