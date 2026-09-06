@@ -2,107 +2,82 @@ import { FastifyInstance } from "fastify";
 
 export async function airQualityRoutes(fastify: FastifyInstance) {
   fastify.get("/airQuality", async (request, reply) => {
-    const {
-      lat,
-      lon,
-      radius = "10000",
-    } = request.query as {
-      lat?: string;
-      lon?: string;
-      radius?: string;
+    const { latitude, longitude } = request.query as {
+      latitude?: string;
+      longitude?: string;
     };
 
-    if (!lat || !lon) {
+    if (!latitude || !longitude) {
       return reply.code(400).send({
-        error: "lat and lon are required",
-      });
-    }
-
-    const latitude = Number(lat);
-    const longitude = Number(lon);
-    const searchRadius = Number(radius);
-
-    if (
-      !Number.isFinite(latitude) ||
-      !Number.isFinite(longitude) ||
-      !Number.isFinite(searchRadius)
-    ) {
-      return reply.code(400).send({
-        error: "Invalid latitude, longitude or radius",
+        success: false,
+        message: "latitude and longitude are required",
       });
     }
 
     try {
-      // 1. Find OpenAQ monitoring stations near the user
-      const locationsResponse = await fetch(
-        `https://api.openaq.org/v3/locations?coordinates=${latitude},${longitude}&radius=${searchRadius}&limit=100`,
-        {
-          headers: {
-            "X-API-Key": process.env.OPENAQ_API_KEY!,
-          },
-        },
-      );
+      const lat = Number(latitude);
+      const lon = Number(longitude);
 
-      if (!locationsResponse.ok) {
-        const errorText = await locationsResponse.text();
-
-        fastify.log.error(errorText);
-
-        return reply.code(locationsResponse.status).send({
-          error: "OpenAQ locations request failed",
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        return reply.code(400).send({
+          success: false,
+          message: "Invalid latitude or longitude",
         });
       }
 
-      const locationsData = await locationsResponse.json();
-
-      // 2. Get latest measurements for every nearby station
-      const locations = locationsData.results ?? [];
-
-      const stations = await Promise.all(
-        locations.map(async (location: any) => {
-          try {
-            const latestResponse = await fetch(
-              `https://api.openaq.org/v3/locations/${location.id}/latest`,
-              {
-                headers: {
-                  "X-API-Key": process.env.OPENAQ_API_KEY!,
-                },
-              },
-            );
-
-            if (!latestResponse.ok) {
-              return null;
-            }
-
-            const latestData = await latestResponse.json();
-
-            return {
-              id: location.id,
-              name: location.name,
-              locality: location.locality,
-              country: location.country,
-              coordinates: location.coordinates,
-              measurements: latestData.results ?? [],
-            };
-          } catch {
-            return null;
-          }
-        }),
+      const url = new URL(
+        "https://air-quality-api.open-meteo.com/v1/air-quality",
       );
 
-      return reply.send({
-        userLocation: {
-          latitude,
-          longitude,
+      url.searchParams.set("latitude", lat.toString());
+      url.searchParams.set("longitude", lon.toString());
+
+      url.searchParams.set(
+        "current",
+        [
+          "us_aqi",
+          "us_aqi_pm2_5",
+          "us_aqi_pm10",
+          "us_aqi_nitrogen_dioxide",
+          "us_aqi_ozone",
+          "us_aqi_sulphur_dioxide",
+          "us_aqi_carbon_monoxide",
+          "pm2_5",
+          "pm10",
+          "nitrogen_dioxide",
+          "ozone",
+          "sulphur_dioxide",
+          "carbon_monoxide",
+        ].join(","),
+      );
+
+      url.searchParams.set("timezone", "auto");
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Open-Meteo returned ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return {
+        success: true,
+        location: {
+          latitude: lat,
+          longitude: lon,
         },
-        radius: searchRadius,
-        stations: stations.filter(Boolean),
-      });
+        modeledAQ: {
+          current: data.current,
+          current_units: data.current_units,
+        },
+      };
     } catch (error) {
-      fastify.log.error(error);
+      request.log.error(error);
 
       return reply.code(500).send({
-        error: "Failed to fetch air quality data",
+        success: false,
+        message: "Failed to fetch air quality data",
       });
     }
   });
