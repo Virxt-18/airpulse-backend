@@ -1,9 +1,11 @@
 import "dotenv/config";
+
 import Fastify, { FastifyInstance, FastifyServerOptions } from "fastify";
+
 import cors from "@fastify/cors";
-import { readdirSync } from "node:fs";
-import path from "node:path";
+
 import { airQualityRoutes } from "./routes/airQuality";
+import { weatherRoutes } from "./routes/weather";
 
 export interface AppOptions extends FastifyServerOptions {}
 
@@ -11,6 +13,7 @@ const options: AppOptions = {
   routerOptions: {
     ignoreTrailingSlash: true,
   },
+
   logger: {
     transport: {
       target: "pino-pretty",
@@ -26,15 +29,20 @@ const options: AppOptions = {
 
 const app: FastifyInstance = Fastify(options);
 
+// CORS
 app.register(cors, {
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
 });
-app.register(airQualityRoutes);
 
+// Routes
+app.register(airQualityRoutes);
+app.register(weatherRoutes);
+
+// Error handler
 app.setErrorHandler((error, request, reply) => {
   const err = error as any;
+
   const code = Number(err.statusCode) || 500;
 
   if (code >= 400 && code < 500) {
@@ -43,26 +51,20 @@ app.setErrorHandler((error, request, reply) => {
     request.log.error(err);
   }
 
-  return reply.code(err.statusCode || 500).send({
+  return reply.code(code).send({
     error: true,
     message: err.message || "Internal Server Error",
     details: err.error || {},
   });
 });
 
-const dirs = ["./routes"];
-
-for (const dir of dirs) {
-  for (const file of readdirSync(path.join(__dirname, dir))) {
-    if (file.endsWith(".ts") || file.endsWith(".js")) {
-      app.register(require(path.join(__dirname, dir, file)));
-    }
-  }
-}
-// Minimal test route for diagnostics
-app.get("/test", async (request, reply) => {
-  return { message: "Test route works" };
+// Test route
+app.get("/test", async () => {
+  return {
+    message: "Test route works",
+  };
 });
 
 export default app;
+
 export { app, options };
