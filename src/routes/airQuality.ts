@@ -25,9 +25,7 @@ export async function airQualityRoutes(fastify: FastifyInstance) {
         });
       }
 
-      const url = new URL(
-        "https://air-quality-api.open-meteo.com/v1/air-quality",
-      );
+      const url = new URL("https://airpulse-backend-2muo.onrender.com");
 
       url.searchParams.set("latitude", lat.toString());
       url.searchParams.set("longitude", lon.toString());
