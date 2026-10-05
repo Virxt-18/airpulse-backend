@@ -54,3 +54,5 @@ Thumbs.db
 .npm/
 .parcel-cache/
 .cache/
+# Citizen photo uploads
+uploads/

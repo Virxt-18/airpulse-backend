@@ -10,6 +10,8 @@ export type PredictionOutput = {
   predictedAqi: number;
   spikeProbability: number;
   confidence: number;
+  model?: string;
+  horizonHours?: number;
 };
 
 export async function requestPrediction(features: PredictionInput): Promise<PredictionOutput> {
